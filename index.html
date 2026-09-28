@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study in Wibe — help with your subjects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboarding" class="onb-wrap">
+  <div class="onb-card">
+    <div class="onb-head">
+      <div class="brand-mark">S</div>
+      <h1>Welcome to Study in Wibe</h1>
+      <p>A place to post the problem you're stuck on, find someone who knows the subject, and stay on track for exams.</p>
+    </div>
+    <div class="steps-dots"><i class="on" id="dot1"></i><i id="dot2"></i><i id="dot3"></i></div>
+
+    <div id="onb-step1">
+      <div class="field">
+        <label>Your name</label>
+        <input id="ob-name" placeholder="e.g. Aida Rakhimova">
+      </div>
+      <div class="field">
+        <label>I am a</label>
+        <div class="choice-grid">
+          <button class="choice" data-role="student" onclick="pickRole('student')">
+            <b>Student</b><span>I need or can offer help with subjects</span>
+          </button>
+          <button class="choice" data-role="teacher" onclick="pickRole('teacher')">
+            <b>Teacher / Tutor</b><span>I mainly help others with subjects</span>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>I'm mostly at</label>
+        <div class="choice-grid">
+          <button class="choice" data-level="school" onclick="pickLevel('school')">
+            <b>School</b><span>Grades 1–12</span>
+          </button>
+          <button class="choice" data-level="university" onclick="pickLevel('university')">
+            <b>University</b><span>Bachelor's, Master's, etc.</span>
+          </button>
+        </div>
+      </div>
+      <button class="btn primary" style="width:100%; padding:11px;" onclick="onbNext(2)">Continue</button>
+    </div>
+
+    <div id="onb-step2" style="display:none;">
+      <div class="field">
+        <label>Which subjects do you know or want help with?</label>
+        <p style="font-size:12px;color:var(--ink-soft);margin:-2px 0 10px;">Tap all that apply — you can change these later.</p>
+        <div id="ob-subjects"></div>
+      </div>
+      <div class="field">
+        <label>Add a subject not listed (optional)</label>
+        <div class="topic-input-row">
+          <input id="ob-custom-subject" placeholder="e.g. Organic Chemistry">
+          <button class="btn small" onclick="addCustomSubject()">Add</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" onclick="onbNext(1)">Back</button>
+        <button class="btn primary" style="flex:1;" onclick="onbNext(3)">Continue</button>
+      </div>
+    </div>
+
+    <div id="onb-step3" style="display:none;">
+      <div class="field">
+        <label>Short bio (optional)</label>
+        <textarea id="ob-bio" rows="3" placeholder="e.g. 2nd-year CS student, happy to help with calculus and Python."></textarea>
+      </div>
+      <div class="empty" style="padding:16px; text-align:left; display:flex; gap:10px; align-items:flex-start;">
+        <span style="font-size:18px;">ℹ️</span>
+        <span style="font-size:12.5px; color:var(--ink-soft);">This runs entirely in your browser — your profile and posts are saved on this device only, so nothing is sent to a server. Use the "export / import" option in Settings to move your data or share a backup.</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" onclick="onbNext(2)">Back</button>
+        <button class="btn primary" style="flex:1;" onclick="finishOnboarding()">Enter Study in Wibe</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="shell">
+    <div class="rail">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div class="brand-name">Study in Wibe</div>
+      </div>
+      <nav>
+        <button class="nav-item" data-tab="feed" onclick="goTab('feed')">📋 Problem board</button>
+        <button class="nav-item" data-tab="search" onclick="goTab('search')">🔍 Find someone</button>
+        <button class="nav-item" data-tab="clubs" onclick="goTab('clubs')">🏛 Clubs</button>
+        <button class="nav-item" data-tab="chat" onclick="goTab('chat')">💬 Chat</button>
+        <button class="nav-item" data-tab="focus" onclick="goTab('focus')">⏱ Focus timer</button>
+        <button class="nav-item" data-tab="exam" onclick="goTab('exam')">🎯 Exam planner</button>
+        <button class="nav-item" data-tab="profile" onclick="goTab('profile')">👤 My profile</button>
+      </nav>
+      <div class="rail-spacer"></div>
+      <button class="nav-item" onclick="exportData()">⬇ Export backup</button>
+      <button class="nav-item" onclick="document.getElementById('import-file').click()">⬆ Import backup</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importData(event)">
+      <div class="rail-user">
+        <div class="avatar" id="rail-avatar" style="background:var(--teal);">A</div>
+        <div class="who"><b id="rail-name">—</b><span id="rail-sub">—</span></div>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- FEED -->
+      <section id="tab-feed">
+        <div class="topline">
+          <div>
+            <h1>Problem board</h1>
+            <p>Post what you're stuck on. Others browsing your level and subject can jump in and help.</p>
+          </div>
+          <button class="btn accent" onclick="openPostModal()">+ Post a problem</button>
+        </div>
+        <div class="filters">
+          <div class="seg" id="level-seg">
+            <button class="on" data-v="all" onclick="setLevelFilter('all')">All</button>
+            <button data-v="school" onclick="setLevelFilter('school')">School</button>
+            <button data-v="university" onclick="setLevelFilter('university')">University</button>
+          </div>
+          <select id="subject-filter" onchange="renderFeed()" style="width:200px;">
+            <option value="">All subjects</option>
+          </select>
+          <div class="seg" id="status-seg">
+            <button class="on" data-v="all" onclick="setStatusFilter('all')">All</button>
+            <button data-v="open" onclick="setStatusFilter('open')">Open</button>
+            <button data-v="solved" onclick="setStatusFilter('solved')">Solved</button>
+          </div>
+        </div>
+        <div id="feed-list"></div>
+      </section>
+
+      <!-- SEARCH -->
+      <section id="tab-search" style="display:none;">
+        <div class="topline">
+          <div>
+            <h1>Find someone who knows it</h1>
+            <p>Search teachers and students by subject, name, or level.</p>
+          </div>
+        </div>
+        <div class="filters">
+          <input id="people-search" placeholder="Search by name or subject…" style="max-width:280px;" oninput="renderDirectory()">
+          <div class="seg" id="people-role-seg">
+            <button class="on" data-v="all" onclick="setPeopleRole('all')">Everyone</button>
+            <button data-v="teacher" onclick="setPeopleRole('teacher')">Teachers</button>
+            <button data-v="student" onclick="setPeopleRole('student')">Students</button>
+          </div>
+          <div class="seg" id="people-level-seg">
+            <button class="on" data-v="all" onclick="setPeopleLevel('all')">All levels</button>
+            <button data-v="school" onclick="setPeopleLevel('school')">School</button>
+            <button data-v="university" onclick="setPeopleLevel('university')">University</button>
+          </div>
+        </div>
+        <div id="directory-list"></div>
+      </section>
+
+      <!-- CLUBS -->
+      <section id="tab-clubs" style="display:none;">
+        <div class="topline">
+          <div>
+            <h1>Clubs</h1>
+            <p>Subject clubs where students and teachers study together, ask questions, and share resources.</p>
+          </div>
+          <button class="btn accent" onclick="openClubModal()">+ Create a club</button>
+        </div>
+        <div class="filters">
+          <input id="club-search" placeholder="Search clubs…" style="max-width:240px;" oninput="renderClubs()">
+          <select id="club-subject-filter" onchange="renderClubs()" style="width:190px;">
+            <option value="">All subjects</option>
+          </select>
+          <div class="seg" id="club-level-seg">
+            <button class="on" data-v="all" onclick="setClubLevelFilter('all')">All levels</button>
+            <button data-v="school" onclick="setClubLevelFilter('school')">School</button>
+            <button data-v="university" onclick="setClubLevelFilter('university')">University</button>
+          </div>
+          <div class="seg" id="club-mine-seg">
+            <button class="on" data-v="all" onclick="setClubMineFilter('all')">All clubs</button>
+            <button data-v="mine" onclick="setClubMineFilter('mine')">My clubs</button>
+          </div>
+        </div>
+        <div id="clubs-list"></div>
+      </section>
+
+      <!-- CHAT -->
+      <section id="tab-chat" style="display:none;">
+        <div class="topline"><div><h1>Chat</h1><p>Talk through a problem directly with someone.</p></div></div>
+        <div class="chat-wrap">
+          <div class="chat-list" id="chat-list"></div>
+          <div class="chat-main">
+            <div class="chat-head" id="chat-head"><span style="color:var(--ink-soft); font-size:13.5px;">Select a conversation</span></div>
+            <div class="chat-body" id="chat-body"></div>
+            <div class="chat-input">
+              <label class="upload-btn" style="padding:9px 11px;">📎<input type="file" id="chat-media" accept="image/*,video/*" style="display:none" onchange="stageChatMedia(event)"></label>
+              <input id="chat-text" placeholder="Write a message…" onkeydown="if(event.key==='Enter')sendMessage()">
+              <button class="btn primary small" onclick="sendMessage()">Send</button>
+            </div>
+            <div id="chat-media-preview" style="display:none; padding:0 14px 10px; font-size:12px; color:var(--ink-soft);"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOCUS -->
+      <section id="tab-focus" style="display:none;">
+        <div class="topline"><div><h1>Focus timer</h1><p>A simple Pomodoro timer to study distraction-free.</p></div></div>
+        <div class="card timer-wrap">
+          <div class="ring">
+            <svg width="260" height="260" viewBox="0 0 260 260">
+              <circle cx="130" cy="130" r="118" fill="none" stroke="#E7EAF1" stroke-width="10"/>
+              <circle id="ring-progress" cx="130" cy="130" r="118" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="741.5" stroke-dashoffset="0"/>
+            </svg>
+            <div style="text-align:center;">
+              <div class="time" id="timer-display">25:00</div>
+              <div class="mode" id="timer-mode">FOCUS SESSION</div>
+            </div>
+          </div>
+          <div class="mode-picker">
+            <button class="btn small" data-mins="25" onclick="setTimerLength(25,'FOCUS SESSION')">25 min focus</button>
+            <button class="btn small" data-mins="50" onclick="setTimerLength(50,'DEEP FOCUS')">50 min focus</button>
+            <button class="btn small" data-mins="5" onclick="setTimerLength(5,'SHORT BREAK')">5 min break</button>
+            <button class="btn small" data-mins="15" onclick="setTimerLength(15,'LONG BREAK')">15 min break</button>
+          </div>
+          <div class="timer-controls">
+            <button class="btn primary" id="timer-toggle" onclick="toggleTimer()">Start</button>
+            <button class="btn" onclick="resetTimer()">Reset</button>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="n" id="stat-today">0</div><div class="l">sessions today</div></div>
+            <div class="stat-box"><div class="n" id="stat-total">0</div><div class="l">total sessions</div></div>
+            <div class="stat-box"><div class="n" id="stat-minutes">0</div><div class="l">minutes focused</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXAM PLANNER -->
+      <section id="tab-exam" style="display:none;">
+        <div class="topline">
+          <div><h1>Exam planner</h1><p>Enter your exam date and the topics you need to cover — get a day-by-day plan.</p></div>
+          <button class="btn accent" onclick="openExamModal()">+ New exam plan</button>
+        </div>
+        <div id="exam-list"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="tab-profile" style="display:none;">
+        <div class="topline"><div><h1>My profile</h1><p>This is what other students and teachers see about you.</p></div></div>
+        <div class="two-col">
+          <div>
+            <div class="card" style="padding:22px 24px;">
+              <div class="field">
+                <label>Name</label>
+                <input id="pf-name">
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label>I am a</label>
+                  <select id="pf-role"><option value="student">Student</option><option value="teacher">Teacher / Tutor</option></select>
+                </div>
+                <div class="field">
+                  <label>Level</label>
+                  <select id="pf-level"><option value="school">School</option><option value="university">University</option></select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Bio</label>
+                <textarea id="pf-bio" rows="3"></textarea>
+              </div>
+              <div class="field">
+                <label>Subjects</label>
+                <div id="pf-subjects"></div>
+                <div class="topic-input-row" style="margin-top:8px;">
+                  <input id="pf-custom-subject" placeholder="Add a subject…">
+                  <button class="btn small" onclick="pfAddCustomSubject()">Add</button>
+                </div>
+              </div>
+              <button class="btn primary" onclick="saveProfile()">Save changes</button>
+              <span id="pf-saved" style="font-size:12.5px; color:var(--teal); margin-left:10px; display:none;">Saved ✓</span>
+            </div>
+          </div>
+          <div>
+            <div class="card side-card">
+              <h3>Your activity</h3>
+              <div style="font-size:13.5px; line-height:2;">
+                <div>Problems posted: <b id="prof-posts">0</b></div>
+                <div>Replies given: <b id="prof-replies">0</b></div>
+                <div>Focus sessions: <b id="prof-sessions">0</b></div>
+                <div>Exam plans: <b id="prof-plans">0</b></div>
+              </div>
+            </div>
+            <div class="card side-card">
+              <h3>Danger zone</h3>
+              <button class="btn small" style="border-color:var(--coral); color:var(--coral);" onclick="resetAll()">Erase all local data</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- POST PROBLEM MODAL -->
+<div class="modal-bg" id="post-modal-bg">
+  <div class="modal">
+    <h2>Post a problem</h2>
+    <div class="field">
+      <label>Title</label>
+      <input id="post-title" placeholder="e.g. Stuck on integration by parts">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Subject</label>
+        <select id="post-subject"></select>
+      </div>
+      <div class="field">
+        <label>Level</label>
+        <select id="post-level"><option value="school">School</option><option value="university">University</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Describe the problem</label>
+      <textarea id="post-body" rows="4" placeholder="What have you tried? Where exactly are you stuck?"></textarea>
+    </div>
+    <div class="field">
+      <label>Attach a photo or video (optional)</label>
+      <label class="upload-btn">📎 Choose a file<input type="file" id="post-media" accept="image/*,video/*" style="display:none" onchange="stagePostMedia(event)"></label>
+      <div id="post-media-name" style="font-size:12px; color:var(--ink-soft); margin-top:6px;"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="btn" onclick="closeModal('post-modal-bg')">Cancel</button>
+      <button class="btn primary" style="flex:1;" onclick="submitPost()">Post problem</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXAM MODAL -->
+<div class="modal-bg" id="exam-modal-bg">
+  <div class="modal">
+    <h2>New exam plan</h2>
+    <div class="row2">
+      <div class="field">
+        <label>Exam / subject name</label>
+        <input id="exam-name" placeholder="e.g. Calculus II Final">
+      </div>
+      <div class="field">
+        <label>Exam date</label>
+        <input id="exam-date" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label>Topics to learn</label>
+      <div class="topic-input-row">
+        <input id="exam-topic-input" placeholder="e.g. Integration by parts" onkeydown="if(event.key==='Enter'){event.preventDefault();addExamTopic();}">
+        <button class="btn small" onclick="addExamTopic()">Add</button>
+      </div>
+      <div id="exam-topics-list"></div>
+    </div>
+    <div class="field">
+      <label>How many hours can you study per day?</label>
+      <input id="exam-hours" type="number" min="0.5" step="0.5" value="2">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="btn" onclick="closeModal('exam-modal-bg')">Cancel</button>
+      <button class="btn primary" style="flex:1;" onclick="generatePlan()">Generate plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE CLUB MODAL -->
+<div class="modal-bg" id="club-modal-bg">
+  <div class="modal">
+    <h2>Create a club</h2>
+    <div class="field">
+      <label>Club name</label>
+      <input id="club-name" placeholder="e.g. Calculus Study Circle">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Subject</label>
+        <select id="club-subject"></select>
+      </div>
+      <div class="field">
+        <label>Level</label>
+        <select id="club-level">
+          <option value="school">School</option>
+          <option value="university">University</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>What's this club about?</label>
+      <textarea id="club-desc" rows="3" placeholder="e.g. Weekly problem-solving sessions and past-paper review."></textarea>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="btn" onclick="closeModal('club-modal-bg')">Cancel</button>
+      <button class="btn primary" style="flex:1;" onclick="submitClub()">Create club</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLUB DETAIL MODAL -->
+<div class="modal-bg" id="club-detail-bg">
+  <div class="modal" id="club-detail-content" style="max-width:600px;"></div>
+</div>
+
+<!-- LIVE CAMERA MODAL -->
+<div class="call-bg" id="call-bg">
+  <div class="call-box">
+    <div class="call-video-wrap">
+      <div class="call-label" id="call-label">Camera preview</div>
+      <video id="call-local-video" autoplay muted playsinline></video>
+      <div class="call-offline" id="call-offline" style="display:none;"></div>
+    </div>
+    <div class="call-controls">
+      <button class="call-btn" id="call-mic-btn" onclick="toggleCallMic()">🎙</button>
+      <button class="call-btn" id="call-cam-btn" onclick="toggleCallCam()">🎥</button>
+      <button class="call-btn end" onclick="closeLiveCamera()">✕ End</button>
+    </div>
+    <div class="call-note">This shows your own camera as a preview. Real live video between two different people's devices needs a backend signaling server, which this offline file doesn't have — everything else here (chat, media, clubs) still works fully.</div>
+  </div>
+</div>
+
+<!-- PROBLEM DETAIL MODAL -->
+<div class="modal-bg" id="detail-modal-bg">
+  <div class="modal" id="detail-modal-content" style="max-width:600px;"></div>
+</div>
+
+<!-- EXAM DETAIL MODAL -->
+<div class="modal-bg" id="exam-detail-bg">
+  <div class="modal" id="exam-detail-content" style="max-width:600px;"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
